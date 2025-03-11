@@ -1,0 +1,12 @@
+megs: 32  # Memory size in Megabytes
+cpu: count=1, ips=1000000
+vga: extension=vbe
+romimage: file=/usr/local/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
+boot: floppy  # Boot from floppy
+floppya: 1_44=build/main_floppy.img, status=inserted
+log: build/bochs.log
+clock: sync=realtime, time0=local
+mouse: type=ps2, enabled=1
+display_library: x
+keyboard: keymap=/usr/local/share/bochs/keymaps/x11-pc-de.map

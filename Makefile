@@ -59,6 +59,9 @@ always:
 bochs:
 	@bochs -f .bochsrc -q
 
+bochs-x:
+	@bochs -f .bochsrc-x -q
+
 qemu:
 	@qemu-system-i386 -fda build/main_floppy.img
 
