@@ -5,10 +5,13 @@
 #include <stddef.h>
 
 #include "keyboard.h"
+#include "display.h"
 #include "../core/stdio.h"
 #include "../core/x86.h"
 #include "../core/idt.h"
 #include "../core/kernel.h"
+#include "../core/cmd_executor.h"
+#include "../libs/apps/terminal.h"
 
 extern void irq1(void);
 
@@ -41,33 +44,44 @@ void keyboard_handler(void) {
     if (status & 0x01) {
         scancode = x86_inb(KEYBOARD_DATA_PORT);
 
-        if (!(scancode & 0x80)) {    // ensure key press
+        // Only process key press events (ignore key releases)
+        if (!(scancode & 0x80)) {
             if (scancode == ENTER_SCANCODE) {
-                putc('\r');
-                putc('\n');
-                input_buffer[buffer_index] = '\0';
-                line_ready = 1;  // set flag
-                send_eoi(1);  // send end of interrupt signal
-                return;
-            } else if (scancode == BACKSPACE_SCANCODE) { // backspace
-                if (buffer_index == 0) {
-                    send_eoi(1);  // send end of interrupt signal
-                    return;
+                if (!g_text_mode) {
+                    terminal_handle_key('\n'); // Forward newline to terminal window
+                } else {
+                    console_putc('\r');
+                    console_putc('\n');
+                    input_buffer[buffer_index] = '\0';
+                    line_ready = 1;  // Line is ready
                 }
-                buffer_index--;
-                input_buffer[buffer_index] = '\0';
-                putc('\b');
+                send_eoi(1);
+                return;
+            } else if (scancode == BACKSPACE_SCANCODE) {
+                if (!g_text_mode) {
+                    terminal_handle_key('\b');
+                } else {
+                    if (buffer_index > 0) {
+                        buffer_index--;
+                        input_buffer[buffer_index] = '\0';
+                        console_putc('\b');
+                    }
+                }
             } else if (buffer_index < MAX_INPUT_LENGTH - 1) {
                 ascii = scancode_to_ascii[scancode];
                 if (ascii != 0) {
-                    input_buffer[buffer_index++] = ascii;
-                    putc(ascii);
+                    if (!g_text_mode) {
+                        terminal_handle_key(ascii);
+                    } else {
+                        input_buffer[buffer_index++] = ascii;
+                        console_putc(ascii);
+                    }
                 }
             }
         }
     }
 
-    send_eoi(1);  // send end of interrupt signal
+    send_eoi(1);
 }
 
 void init_keyboard(void) {
@@ -93,4 +107,8 @@ char* read_line(void) {
         __asm__("hlt");  // halt CPU until next interrupt
     }
     return input_buffer;
+}
+
+char* read_line_nonblocking(void) {
+    return line_ready ? input_buffer : NULL;
 }

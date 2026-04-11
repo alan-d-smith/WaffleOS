@@ -7,11 +7,13 @@
 #define SECTOR_SIZE 512
 
 // From https://github.com/nanobyte-dev/nanobyte_os/blob/videos/part7/src/bootloader/stage2/disk.h
+// modified to have "is_floppy"
 typedef struct {
     uint8_t id;
     uint16_t cylinders;
     uint16_t sectors;
     uint16_t heads;
+    bool is_floppy;
 } DISK;
 
 bool DISK_Initialize(DISK* disk, uint8_t driveNumber);

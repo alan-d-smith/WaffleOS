@@ -8,7 +8,8 @@
 #define STR(x) #x
 #define XSTR(x) STR(x)
 
-unsigned strlen(const char* str); // from: https://github.com/nanobyte-dev/nanobyte_os/blob/videos/part7/src/bootloader/stage2/string.h\
+// from: https://github.com/nanobyte-dev/nanobyte_os/blob/videos/part7/src/bootloader/stage2/string.h
+unsigned strlen(const char* str);
 
 int isalnum(int c);
 int strcmp(const char* str1, const char* str2);

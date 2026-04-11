@@ -1,12 +1,16 @@
 // Display driver
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <math.h>
 #include <float.h>
 #include "vga.h"
+#include "font.h"
 
+extern bool g_text_mode;
+extern uint32_t pitch;
 extern uint16_t g_SCREEN_WIDTH;
 extern uint16_t g_SCREEN_HEIGHT;
 extern uint16_t g_BYTES_PER_PIXEL;
@@ -114,10 +118,11 @@ void g_clear_screen();
 void put_pixel(int x, int y, uint32_t color);
 void draw_rect(int x, int y, int width, int height, uint32_t color);
 void draw_line(int x1, int y1, int x2, int y2, uint32_t color);
-void draw_smile(int x, int y, uint32_t color);
 
 // Text rendering routines using an 8x16 bitmap font
 void draw_char(int x, int y, char ch, uint32_t color);
 void draw_string(int x, int y, const char *str, uint32_t color);
 void draw_scaled_char(int x, int y, char ch, uint32_t color, float scale);
 void draw_scaled_string(int x, int y, const char *str, uint32_t color, float scale);
+void draw_char_styled(int x, int y, char ch, uint32_t color, FontStyle style);
+void draw_string_styled(int x, int y, const char *str, uint32_t color, FontStyle style);

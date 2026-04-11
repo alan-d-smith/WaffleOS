@@ -10,11 +10,17 @@
 #include "../core/memory.h"
 #include "../drivers/disk.h"
 
+#define SECTOR_SIZE 512
+
 #define MAX_PATH_LENGTH 256
 #define MAX_FILE_HANDLES 10
 
 #define GPT_PROTECTIVE_MBR 0xEE
 #define UEFI_SYSTEM_PARTITION 0xEF
+
+#define MAX_PATH_SIZE           256
+#define ROOT_DIRECTORY_HANDLE   -1
+#define FAT_CACHE_SIZE          5
 
 typedef struct
 {
@@ -297,6 +303,14 @@ typedef struct {
     uint32_t SizeOfPartitionEntry;
     uint32_t PartitionEntryArrayCRC32;
 } __attribute__((packed)) GPTHeader;
+
+// Declare the FAT filesystem structure.
+extern FAT_Filesystem current_filesystem;
+
+// Make the FAT data pointer available externally.
+extern FAT_Data* g_Data;
+extern uint8_t* g_Fat;
+extern uint32_t g_DataSectionLba;
 
 bool FAT_Initialize(DISK* disk);
 FAT_File * FAT_Open(DISK* disk, const char* path);

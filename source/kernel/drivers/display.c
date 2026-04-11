@@ -4,19 +4,22 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "../libs/string.h"
 #include "../core/x86.h"
 #include "../core/memory.h"
 #include "font.h" // contains basic font definitions
 
-uint16_t g_SCREEN_WIDTH = 320;  // Default value, overridden at runtime
-uint16_t g_SCREEN_HEIGHT = 200; // Default value, overridden at runtime
+bool g_text_mode = true;
+
+uint16_t g_SCREEN_WIDTH = 80;  // Default value, overridden at runtime
+uint16_t g_SCREEN_HEIGHT = 25; // Default value, overridden at runtime
+uint32_t pitch = 80;
 uint16_t g_BYTES_PER_PIXEL = 1;
 
 // Global variables ----------------------------------------------------------------------------------------------------
 static volatile uint8_t *framebuffer = (volatile uint8_t *)0;
-static uint32_t pitch;
 static volatile uint8_t *current_target = NULL;
 
 // Helper functions ----------------------------------------------------------------------------------------------------
@@ -36,6 +39,8 @@ static inline volatile uint8_t* get_drawing_target() {
 // ---------------------------------------------------------------------------------------------------------------------
 
 void enable_graphics_mode(uint16_t mode) {
+    g_text_mode = false;
+
     framebuffer = (volatile uint8_t*)VGA_ADDRESS;
 
     if (mode > MODE_320x200x1 || mode < MODE_320x200x1) {
@@ -56,6 +61,10 @@ void enable_graphics_mode(uint16_t mode) {
 
 // Clear the screen to the specified color.
 void g_clrscr(uint32_t color) {
+    if (g_text_mode) {
+        clrscr();
+        return;
+    }
     for (int y = 0; y < g_SCREEN_HEIGHT; y++) {
         for (int x = 0; x < g_SCREEN_WIDTH; x++) {
             put_pixel(x, y, color);
@@ -65,25 +74,6 @@ void g_clrscr(uint32_t color) {
 
 void g_clear_screen() {
     g_clrscr(BLACK_16);
-}
-
-void draw_smile(int x, int y, uint32_t color) {
-    // eye
-    put_pixel(x, y, WHITE_16);
-    // eye
-    put_pixel(x+10, y, WHITE_16);
-    // mouth
-    put_pixel(x, y+8,WHITE_16);
-    put_pixel(x+1,	y+9,WHITE_16);
-    put_pixel(x+2,	y+10,WHITE_16);
-    put_pixel(x+3,	y+10,WHITE_16);
-    put_pixel(x+4,	y+10,WHITE_16);
-    put_pixel(x+5,	y+10,WHITE_16);
-    put_pixel(x+6,	y+10,WHITE_16);
-    put_pixel(x+7,	y+10,WHITE_16);
-    put_pixel(x+8,	y+10,WHITE_16);
-    put_pixel(x+9,	y+9,WHITE_16);
-    put_pixel(x+10,y+8,WHITE_16);
 }
 
 // Put a single pixel at the specified (x, y) position.
@@ -210,15 +200,6 @@ void draw_string(int x, int y, const char *str, uint32_t color) {
 /**
 * Draw a single scaled character at (x, y) using nearest neighbor sampling
 * This supports both upscaling (scale > 1) and downscaling (scale < 1).
-*
-* @param x The x-coordinate (in pixels) of the top-left corner where the character will be drawn.
-* @param y The y-coordinate (in pixels) of the top-left corner where the character will be drawn.
-* @param ch The ASCII character (in the range 0-127) to be rendered.
-* @param color Character colour
-* @param scale The scaling factor applied to the character.
-*              For example, scale = 2.0 enlarges the character to double its size,
-*              while scale = 0.5 downsizes it to half its original dimensions.
-*              The output width becomes (8 * scale) and height becomes (16 * scale).
 */
 void draw_scaled_char(int x, int y, char ch, uint32_t color, float scale) {
     uint8_t c = (uint8_t)ch;
@@ -260,12 +241,6 @@ void draw_scaled_char(int x, int y, char ch, uint32_t color, float scale) {
 
 /**
 * Draw a null-terminated string starting at (x, y) with scaling
-*
-* @param x The starting x-coordinate (px) for the string's first character.
-* @param y The starting y-coordinate (px) for the string's first character.
-* @param str A pointer to a null-terminated string containing the text to be rendered.
-* @param color Character colour
-* @param scale The scaling factor applied to each character.
 */
 void draw_scaled_string(int x, int y, const char *str, uint32_t color, float scale) {
     int orig_x = x;
@@ -277,6 +252,58 @@ void draw_scaled_string(int x, int y, const char *str, uint32_t color, float sca
         } else {
             draw_scaled_char(x, y, *str, color, scale);
             x += (int)(8.0f * scale);
+        }
+        str++;
+    }
+}
+
+void draw_char_styled(int x, int y, char ch, uint32_t color, FontStyle style) {
+    int scaled_width = (int)ceil(style.CharacterWidth * style.Scale);
+    int scaled_height = (int)ceil(style.CharacterHeight * style.Scale);
+
+    for (int row = 0; row < scaled_height; row++) {
+        float src_y_f = ((float)row + 0.5f) / style.Scale;
+        int src_y = (int)src_y_f;
+        if (src_y >= (int)style.CharacterHeight)
+            src_y = style.CharacterHeight - 1;
+
+        for (int col = 0; col < scaled_width; col++) {
+            float src_x_f = ((float)col + 0.5f) / style.Scale;
+            int src_x = (int)src_x_f;
+            if (src_x >= (int)style.CharacterWidth)
+                src_x = style.CharacterWidth - 1;
+
+            // For the 8x8 basic font style, invert horizontally
+            if (style.Reference == (const uint8_t*)font8x8_basic) {
+                src_x = style.CharacterWidth - 1 - src_x;
+            }
+
+            // Compute offset into the flattened font data.
+            int char_index = (int)ch;  // ASCII 0-127.
+            int offset = char_index * style.CharacterHeight + src_y;
+            uint8_t row_data = ((const uint8_t*)style.Reference)[offset];
+
+            // Create a mask for the current column.
+            uint8_t mask = 1 << (style.CharacterWidth - 1 - src_x);
+            if (row_data & mask) {
+                put_pixel(x + col, y + row, color);
+            }
+        }
+    }
+}
+
+/**
+ * Draws a null-terminated string starting at (x, y) using the given FontStyle.
+ */
+void draw_string_styled(int x, int y, const char *str, uint32_t color, FontStyle style) {
+    int orig_x = x;
+    while (*str) {
+        if (*str == '\n') {
+            y += (int)ceil(style.CharacterHeight * style.Scale);
+            x = orig_x;
+        } else {
+            draw_char_styled(x, y, *str, color, style);
+            x += (int)ceil(style.CharacterWidth * style.Scale);
         }
         str++;
     }

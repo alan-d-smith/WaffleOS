@@ -1,12 +1,12 @@
 megs: 32  # Memory size in Megabytes
-cpu: count=1, ips=1000000
+cpu: count=1, ips=5000000
 vga: extension=vbe
 romimage: file=/usr/local/share/bochs/BIOS-bochs-latest
 vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 boot: floppy  # Boot from floppy
 floppya: 1_44=build/main_floppy.img, status=inserted
 log: build/bochs.log
-clock: sync=realtime, time0=local
+clock: sync=none, time0=local, rtc_sync=0
 mouse: type=ps2, enabled=1
 display_library: sdl2
 keyboard: keymap=/usr/local/share/bochs/keymaps/sdl2-pc-de.map

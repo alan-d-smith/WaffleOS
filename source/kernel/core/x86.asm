@@ -52,3 +52,36 @@ crash_me:
     int 0x80
     ret
 
+; Source of information used for paging: https://wiki.osdev.org/Paging#32-bit_Paging_(Protected_Mode)
+
+; Load the current value of CR3 into EAX and return it.
+global x86_load_cr3
+x86_load_cr3:
+    [bits 32]
+    mov eax, cr3       ; Move CR3 value into EAX
+    ret
+
+; Store a new value into CR3.
+; The new CR3 value is passed on the stack (first parameter).
+global x86_store_cr3
+x86_store_cr3:
+    [bits 32]
+    mov eax, [esp + 4] ; Get the new CR3 value from the stack
+    mov cr3, eax       ; Load it into CR3
+    ret
+
+; Load the current value of CR0 into EAX and return it.
+global x86_load_cr0
+x86_load_cr0:
+    [bits 32]
+    mov eax, cr0
+    ret
+
+; Store a new value into CR0.
+; The new CR0 value is passed on the stack (first parameter).
+global x86_store_cr0
+x86_store_cr0:
+    [bits 32]
+    mov eax, [esp + 4]
+    mov cr0, eax
+    ret

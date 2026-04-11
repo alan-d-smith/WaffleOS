@@ -1,7 +1,6 @@
 // A minimal implementation of a PS/2 mouse driver
 // Using information from: https://wiki.osdev.org/PS/2_Mouse
 // Adapted from SANiK's mouse driver: https://forum.osdev.org/viewtopic.php?t=10247
-//
 
 #include "mouse.h"
 #include "../core/idt.h"
@@ -66,7 +65,7 @@ void mouse_handler(void)
 
     // If we're at the beginning of a packet, verify that the packet is aligned.
     if (mouse_cycle == 0 && !(data & 0x08)) {
-        // Packet is misaligned. Discard this byte.
+        // Packet is misaligned. Discard byte
         return;
     }
 

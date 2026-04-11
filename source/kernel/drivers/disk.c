@@ -47,23 +47,21 @@
 
 #define ATA_FLOATING_BUS 0xFF
 
-// TEMP
 bool x86_Disk_GetDriveParams(uint8_t drive,
                                                     uint8_t* driveTypeOut,
                                                     uint16_t* cylindersOut,
                                                     uint16_t* sectorsOut,
                                                     uint16_t* headsOut) {
-    return false;
+    return false; // TODO: implement
 }
 
 bool x86_Disk_Reset(uint8_t drive) {
-    return false;
+    return false; // TODO: implement
 }
 
 bool x86_Disk_Read(uint8_t drive, uint16_t cylinder, uint16_t sector, uint16_t head, uint8_t count, void* lowerDataOut) {
-    return false;
+    return false; // TODO: implement
 }
-// End TEMP
 
 static uint8_t last_selected_device = ATA_FLOATING_BUS;  // initial value is invalid - No drive
 

@@ -1,5 +1,3 @@
-// source: https://github.com/nanobyte-dev/nanobyte_os/blob/videos/part7/src/kernel/stdio.c
-
 #include "stdio.h"
 #include "x86.h"
 #include "../libs/string.h"
@@ -207,6 +205,183 @@ void printf_float(double number) {
 #define PRINTF_LENGTH_LONG          3
 #define PRINTF_LENGTH_LONG_LONG     4
 
+
+static void buffer_putc(char *buffer, size_t size, int *pos, char c) {
+    if (*pos < (int)size - 1) {
+        buffer[*pos] = c;
+    }
+    (*pos)++;
+}
+
+static void buffer_print_unsigned(char *buffer, size_t size, int *pos, unsigned long long number, int radix) {
+    char temp[32];
+    int tpos = 0;
+    do {
+        unsigned long long rem = number % radix;
+        number /= radix;
+        temp[tpos++] = g_HexChars[rem];
+    } while (number > 0);
+
+    while (tpos-- > 0) { // print in reverse
+        buffer_putc(buffer, size, pos, temp[tpos]);
+    }
+}
+
+static void buffer_print_signed(char *buffer, size_t size, int *pos, long long number, int radix) {
+    if (number < 0) {
+        buffer_putc(buffer, size, pos, '-');
+        buffer_print_unsigned(buffer, size, pos, (unsigned long long)(-number), radix);
+    } else {
+        buffer_print_unsigned(buffer, size, pos, (unsigned long long)number, radix);
+    }
+}
+
+// vsnprintf: formats a string and writes it into str (up to size-1 characters), then null terminates it
+int vsnprintf(char *str, size_t size, const char *fmt, va_list args) {
+    int pos = 0;
+    int state = PRINTF_STATE_NORMAL;
+    int length_modifier = PRINTF_LENGTH_DEFAULT;
+    int radix = 10;
+    bool sign = false;
+    bool number = false;
+
+    while (*fmt) {
+        switch (state) {
+            case PRINTF_STATE_NORMAL:
+                if (*fmt == '%') {
+                    state = PRINTF_STATE_LENGTH;
+                } else {
+                    buffer_putc(str, size, &pos, *fmt);
+                }
+                break;
+
+            case PRINTF_STATE_LENGTH:
+                if (*fmt == 'h') {
+                    length_modifier = PRINTF_LENGTH_SHORT;
+                    state = PRINTF_STATE_LENGTH_SHORT;
+                } else if (*fmt == 'l') {
+                    length_modifier = PRINTF_LENGTH_LONG;
+                    state = PRINTF_STATE_LENGTH_LONG;
+                } else {
+                    state = PRINTF_STATE_SPEC;
+                    continue; // Reprocess same character
+                }
+                break;
+
+            case PRINTF_STATE_LENGTH_SHORT:
+                if (*fmt == 'h') {
+                    length_modifier = PRINTF_LENGTH_SHORT_SHORT;
+                    state = PRINTF_STATE_SPEC;
+                } else {
+                    state = PRINTF_STATE_SPEC;
+                    continue;
+                }
+                break;
+
+            case PRINTF_STATE_LENGTH_LONG:
+                if (*fmt == 'l') {
+                    length_modifier = PRINTF_LENGTH_LONG_LONG;
+                    state = PRINTF_STATE_SPEC;
+                } else {
+                    state = PRINTF_STATE_SPEC;
+                    continue;
+                }
+                break;
+
+            case PRINTF_STATE_SPEC:
+                switch (*fmt) {
+                    case 'c': {
+                        int c = va_arg(args, int);
+                        buffer_putc(str, size, &pos, (char)c);
+                        break;
+                    }
+                    case 's': {
+                        const char* s = va_arg(args, const char*);
+                        if (s == NULL) s = "(null)";
+                        while (*s) {
+                            buffer_putc(str, size, &pos, *s++);
+                        }
+                        break;
+                    }
+                    case '%':
+                        buffer_putc(str, size, &pos, '%');
+                        break;
+                    case 'd':
+                    case 'i':
+                        radix = 10;
+                        sign = true;
+                        number = true;
+                        break;
+                    case 'u':
+                        radix = 10;
+                        sign = false;
+                        number = true;
+                        break;
+                    case 'x':
+                    case 'X':
+                    case 'p':
+                        radix = 16;
+                        sign = false;
+                        number = true;
+                        break;
+                    case 'o':
+                        radix = 8;
+                        sign = false;
+                        number = true;
+                        break;
+                    default:
+                        // If the specifier is unrecognized, just output it.
+                        buffer_putc(str, size, &pos, *fmt);
+                        break;
+                }
+                if (number) {
+                    if (sign) {
+                        switch (length_modifier) {
+                            case PRINTF_LENGTH_SHORT_SHORT:
+                            case PRINTF_LENGTH_SHORT:
+                            case PRINTF_LENGTH_DEFAULT:
+                                buffer_print_signed(str, size, &pos, va_arg(args, int), radix);
+                                break;
+                            case PRINTF_LENGTH_LONG:
+                                buffer_print_signed(str, size, &pos, va_arg(args, long), radix);
+                                break;
+                            case PRINTF_LENGTH_LONG_LONG:
+                                buffer_print_signed(str, size, &pos, va_arg(args, long long), radix);
+                                break;
+                        }
+                    } else {
+                        switch (length_modifier) {
+                            case PRINTF_LENGTH_SHORT_SHORT:
+                            case PRINTF_LENGTH_SHORT:
+                            case PRINTF_LENGTH_DEFAULT:
+                                buffer_print_unsigned(str, size, &pos, va_arg(args, unsigned int), radix);
+                                break;
+                            case PRINTF_LENGTH_LONG:
+                                buffer_print_unsigned(str, size, &pos, va_arg(args, unsigned long), radix);
+                                break;
+                            case PRINTF_LENGTH_LONG_LONG:
+                                buffer_print_unsigned(str, size, &pos, va_arg(args, unsigned long long), radix);
+                                break;
+                        }
+                    }
+                    state = PRINTF_STATE_NORMAL;
+                    length_modifier = PRINTF_LENGTH_DEFAULT;
+                    radix = 10;
+                    sign = false;
+                    number = false;
+                }
+                break;
+        }
+        fmt++;
+    }
+    if (pos < (int)size)
+        str[pos] = '\0';
+    else if (size > 0)
+        str[size - 1] = '\0';
+    return pos;
+}
+
+// COPIED CODE FROM Nanobyte (https://github.com/nanobyte-dev/nanobyte_os/blob/videos/part7/src/kernel/stdio.c) STARTS HERE
 // Adjustments:
 // Added support for floating point numbers
 void printf(const char* fmt, ...)
@@ -368,7 +543,7 @@ void print_buffer(const char* msg, const void* buffer, uint32_t count)
     puts("\n");
 }
 
-// Nanobyte's code ends here
+// COPIED CODE ENDS HERE
 
 int snprintf(char* str, size_t size, const char* format, ...) {
     if (size == 0) return 0;

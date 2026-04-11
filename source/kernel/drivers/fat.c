@@ -9,26 +9,35 @@
 #include "../libs/string.h"
 #include "../libs/math.h"
 #include "../core/memory.h"
+#include "../core/cmd_executor.h"
+#include "../drivers/disk.h"
+#include "../drivers/floppy.h"
 
-#define SECTOR_SIZE             512
-#define MAX_PATH_SIZE           256
-#define ROOT_DIRECTORY_HANDLE   -1
-#define FAT_CACHE_SIZE          5
+FAT_Filesystem current_filesystem;
 
-static FAT_Filesystem current_filesystem;
-
-static FAT_Data* g_Data;
-static uint8_t* g_Fat = NULL;
-static uint32_t g_DataSectionLba;
+FAT_Data* g_Data;
+uint8_t* g_Fat = NULL;
+uint32_t g_DataSectionLba;
 
 bool FAT_ReadBootSector(DISK* disk)
 {
-    return DISK_ReadSectors(disk, 0, 1, g_Data->BS.BootSectorBytes);
+    if (disk->is_floppy)
+        return FLOPPY_ReadSectors(0, 1, g_Data->BS.BootSectorBytes);
+    else
+        return DISK_ReadSectors(disk, 0, 1, g_Data->BS.BootSectorBytes);
 }
 
 bool FAT_ReadFat(DISK* disk)
 {
-    return DISK_ReadSectors(disk, g_Data->BS.BootSector.ReservedSectors, g_Data->BS.BootSector.SectorsPerFat, g_Fat);
+    if (disk->is_floppy)
+        return FLOPPY_ReadSectors(g_Data->BS.BootSector.ReservedSectors,
+                                   g_Data->BS.BootSector.SectorsPerFat,
+                                   g_Fat);
+    else
+        return DISK_ReadSectors(disk,
+                                g_Data->BS.BootSector.ReservedSectors,
+                                g_Data->BS.BootSector.SectorsPerFat,
+                                g_Fat);
 }
 
 bool FAT_Initialize(DISK* disk)
@@ -119,13 +128,24 @@ FAT_File* FAT_OpenEntry(DISK* disk, FAT_DirectoryEntry* entry)
     fd->CurrentCluster = fd->FirstCluster;
     fd->CurrentSectorInCluster = 0;
 
-    if (!DISK_ReadSectors(disk, FAT_ClusterToLba(fd->CurrentCluster), 1, fd->Buffer))
-    {
-        printf("FAT: open entry failed - read error cluster=%u lba=%u\n", fd->CurrentCluster, FAT_ClusterToLba(fd->CurrentCluster));
-        for (int i = 0; i < 11; i++)
-            printf("%c", entry->Name[i]);
-        printf("\n");
-        return false;
+    if (disk->is_floppy) {
+        if (!FLOPPY_ReadSectors(FAT_ClusterToLba(fd->CurrentCluster), 1, fd->Buffer)) {
+            console_printf("FAT: open entry failed (floppy) - read error cluster=%u lba=%u\n",
+                   fd->CurrentCluster, FAT_ClusterToLba(fd->CurrentCluster));
+            for (int i = 0; i < 11; i++)
+                printf("%c", entry->Name[i]);
+            printf("\n");
+            return false;
+        }
+    } else {
+        if (!DISK_ReadSectors(disk, FAT_ClusterToLba(fd->CurrentCluster), 1, fd->Buffer)) {
+            console_printf("FAT: open entry failed - read error cluster=%u lba=%u\n",
+                   fd->CurrentCluster, FAT_ClusterToLba(fd->CurrentCluster));
+            for (int i = 0; i < 11; i++)
+                printf("%c", entry->Name[i]);
+            printf("\n");
+            return false;
+        }
     }
 
     fd->Opened = true;

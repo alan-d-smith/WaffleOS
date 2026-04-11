@@ -37,7 +37,7 @@ void *calloc(size_t num, size_t size);
 void free(void* ptr);
 
 void *memchr(const void * cs,int c,size_t count);
-void * memscan(void * addr, int c, size_t size);
+void *memscan(void * addr, int c, size_t size);
 void *__memset_generic(void * s, char c,size_t count);
 void *__constant_c_memset(void * s, unsigned long c, size_t count);
 void *__constant_c_and_count_memset(void * s, unsigned long pattern, size_t count);

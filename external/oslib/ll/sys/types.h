@@ -30,6 +30,7 @@
 
 #define u_int32_t DWORD
 #define u_int unsigned int
-#define int32_t int
+//typedef int int32_t;
+
 
 #endif

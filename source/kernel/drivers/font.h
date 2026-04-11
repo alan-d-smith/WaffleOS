@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <float.h>
+#include <stdbool.h>
 
 // Font bitmaps
 extern const uint8_t font8x16[128][16];
@@ -13,7 +14,7 @@ typedef struct {
     float Scale;
     uint32_t CharacterWidth;
     uint32_t CharacterHeight;
-    const uint8_t *Reference;  // Pointer to the font data (flattened)
+    const uint8_t *Reference;  // Pointer to the font data
 } FontStyle;
 
 extern FontStyle FontStyle_8x16;

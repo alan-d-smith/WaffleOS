@@ -30,12 +30,10 @@
 int get_g_screenx();
 int get_g_screeny();
 
-// Nanobyte's definitions start here
 void clrscr();
 void putc(char c);
 void puts(const char* str);
 void printf(const char* fmt, ...);
-void print_buffer(const char* msg, const void* buffer, uint32_t count);
-// Nanobyte's definitions end here
-
+int vsnprintf(char *str, size_t size, const char *fmt, va_list args);
 int snprintf(char* str, size_t size, const char* format, ...);
+void print_buffer(const char* msg, const void* buffer, uint32_t count);

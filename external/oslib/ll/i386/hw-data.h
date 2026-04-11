@@ -203,7 +203,7 @@ typedef void (*INTERRUPT)(void);
 /* This is useful to add special purposes meaning to the function       */
 /* defclaration                                                         */
 
-#define SYSCALL(x)      x
+#define SYSCALL(x) x
 
 END_DEF
 
