@@ -64,13 +64,14 @@ always:
 #
 # Run with Bochs
 #
-bochs:
-	@bochs -f .bochsrc -q
+bochs: $(BUILD_DIR)/main_floppy.img
+	@sh tools/run-bochs.sh
 
-bochs-x:
-	@bochs -f .bochsrc-x -q
+# Force the X11 display (instead of auto-detected SDL2).
+bochs-x: $(BUILD_DIR)/main_floppy.img
+	@BOCHS_DISPLAY=x sh tools/run-bochs.sh
 
-qemu:
+qemu: $(BUILD_DIR)/main_floppy.img
 	@qemu-system-i386 -fda build/main_floppy.img
 
 lsimgroot:

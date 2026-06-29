@@ -1,4 +1,13 @@
 #!/bin/sh
+#
+# Builds Bochs 2.7 from source and installs it under /usr/local.
+#
+# NOTE: This is an ALTERNATIVE to the distribution package. On Debian/Ubuntu/WSL
+# the simplest route is:  sudo apt install bochs bochs-sdl vgabios
+# The committed .bochsrc targets those distro paths (/usr/share/...). If you use
+# this script instead, point .bochsrc at the source-build paths, e.g.:
+#   romimage:    file=/usr/local/share/bochs/BIOS-bochs-latest
+#   vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 
 mkdir -p "toolchain"
 cd toolchain || exit

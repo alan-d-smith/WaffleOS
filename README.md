@@ -80,7 +80,14 @@ Build dependencies:
   The `install_linux_mint.sh` script in this repository automates building the toolchain.
 - `make`
 - `mtools` and `dosfstools` — provide `mkfs.fat`, `mcopy`, and `mmd`, used to assemble the FAT12 floppy image.
-- `qemu-system-i386` to run the result, or `bochs`.
+- `qemu-system-i386` to run the result, or `bochs` (+ `bochs-sdl vgabios`, see [Bochs](#bochs)).
+
+On Debian/Ubuntu/WSL, everything except the cross-compiler is available via apt:
+
+```sh
+sudo apt install nasm make mtools dosfstools qemu-system-x86 bochs bochs-sdl vgabios
+./install_linux_mint.sh    # builds the i686-elf cross-compiler (takes a while)
+```
 
 musl's libm is built automatically from the `external/musl` submodule as part of the build; there is
 no separate install step for it.
@@ -89,15 +96,37 @@ Then:
 
 ```sh
 make          # build build/main_floppy.img
-make qemu     # run the image in QEMU
-make bochs    # run the image in Bochs
+make qemu     # build (if needed) and run the image in QEMU
+make bochs    # build (if needed) and run the image in Bochs
 make clean    # remove build artifacts
 ```
 
 ### Bochs
 
+`make bochs` launches Bochs via `tools/run-bochs.sh`, which auto-detects the BIOS, VGA BIOS and
+display library for your system, so the same command works on Linux and WSL whether Bochs comes from
+a distribution package or a source build. `.bochsrc` holds the rest of the machine configuration.
+
+Install Bochs and its BIOS files:
+
+```sh
+# Debian / Ubuntu / WSL
+sudo apt install bochs bochs-sdl vgabios   # seabios is pulled in as a dependency
+
+# Fedora:  sudo dnf install bochs
+# Arch:    sudo pacman -S bochs
+```
+
+Then `make bochs`. Bochs is built with its internal debugger enabled, so it starts paused at a
+`<bochs:1>` prompt — type `c` and press Enter to start the machine.
+
+Notes:
+- On WSL the SDL2 display is used (the X11 GUI crashes under WSLg); this needs the `bochs-sdl`
+  package.
+- To force a display library: `BOCHS_DISPLAY=x make bochs` (or `make bochs-x`).
+
 <details>
-<summary>Recommended <code>./configure</code> flags for building Bochs on Linux Mint</summary>
+<summary>Recommended <code>./configure</code> flags for building Bochs from source (e.g. Linux Mint)</summary>
 
 See also `install_bochs_linux_mint.sh`.
 
