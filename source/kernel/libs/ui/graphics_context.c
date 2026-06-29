@@ -1,4 +1,5 @@
 #include "graphics_context.h"
+#include <math.h>
 
 void ctx_put_pixel(GraphicsContext *ctx, int x, int y, uint32_t color) {
     if (x < 0 || x >= ctx->width || y < 0 || y >= ctx->height)

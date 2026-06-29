@@ -1,5 +1,0 @@
-1)	Who calls the ll entries??? If only the OS code can do this,
-	the lowlevel doesn't need to protect the mutex regions (this is
-	done by the OS). If we want that everyone can call the lowlevel,
-	the lowlevel functions must protect the mutex regions by cli/sti
-	(warning... save_flags can be needed...)

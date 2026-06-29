@@ -1,7 +1,7 @@
 # PROJECT MAKEFILE (based on: https://github.com/nanobyte-dev/nanobyte_os/blob/videos/part7/Makefile)
 include config.mk
 
-.PHONY: all floppy_image kernel bootloader clean bochs qemu lsimgroot hexdumpsector printdirs printinclude always rebuild
+.PHONY: all floppy_image kernel bootloader libm clean bochs qemu lsimgroot hexdumpsector printdirs printinclude always rebuild
 
 all: floppy_image
 
@@ -39,11 +39,19 @@ $(BUILD_DIR)/stage2.bin: always
 	@echo "--> Created stage2 binary: $(BUILD_DIR)/stage2.bin"
 
 #
+# libm (musl)
+#
+libm: $(BUILD_DIR)/libm.a
+
+$(BUILD_DIR)/libm.a: always
+	@$(MAKE) -C external/libm BUILD_DIR=$(abspath $(BUILD_DIR))
+
+#
 # Kernel
 #
 kernel: $(BUILD_DIR)/kernel.bin
 
-$(BUILD_DIR)/kernel.bin: always
+$(BUILD_DIR)/kernel.bin: libm always
 	@$(MAKE) -C source/kernel BUILD_DIR=$(abspath $(BUILD_DIR))
 	@echo "--> Created kernel binary: $(BUILD_DIR)/kernel.bin"
 
@@ -84,6 +92,7 @@ clean:
 	@$(MAKE) -C source/boot/stage1 BUILD_DIR=$(abspath $(BUILD_DIR)) clean
 	@$(MAKE) -C source/boot/stage2 BUILD_DIR=$(abspath $(BUILD_DIR)) clean
 	@$(MAKE) -C source/kernel BUILD_DIR=$(abspath $(BUILD_DIR)) clean
+	@$(MAKE) -C external/libm BUILD_DIR=$(abspath $(BUILD_DIR)) clean
 	@rm -rf $(BUILD_DIR)/*
 
 rebuild:
