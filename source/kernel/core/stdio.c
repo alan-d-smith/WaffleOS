@@ -364,12 +364,16 @@ int vsnprintf(char *str, size_t size, const char *fmt, va_list args) {
                                 break;
                         }
                     }
-                    state = PRINTF_STATE_NORMAL;
-                    length_modifier = PRINTF_LENGTH_DEFAULT;
-                    radix = 10;
-                    sign = false;
-                    number = false;
                 }
+                // Always return to NORMAL after a conversion specifier. The
+                // c/s/% specifiers leave number == false, so resetting here
+                // (rather than only inside the if above) prevents the parser
+                // from getting stuck in SPEC and misreading following text.
+                state = PRINTF_STATE_NORMAL;
+                length_modifier = PRINTF_LENGTH_DEFAULT;
+                radix = 10;
+                sign = false;
+                number = false;
                 break;
         }
         fmt++;
