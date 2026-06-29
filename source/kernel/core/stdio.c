@@ -16,6 +16,13 @@ const uint8_t DEFAULT_COLOR = 0x7;
 uint8_t* g_ScreenBuffer = (uint8_t*)0xB8000;
 int g_ScreenX = 0, g_ScreenY = 0;
 
+// Current foreground/background attribute used when writing chars
+// Defaults to DEFAULT_COLOR
+uint8_t g_text_color = 0x7;
+
+void set_text_color(uint8_t color) { g_text_color = color; }
+uint8_t get_text_color(void) { return g_text_color; }
+
 int get_g_screenx()
 {
     return g_ScreenX;
@@ -117,6 +124,7 @@ void putc(char c)
 
         default:
             putchr(g_ScreenX, g_ScreenY, c);
+            putcolor(g_ScreenX, g_ScreenY, g_text_color);
             g_ScreenX++;
             break;
     }

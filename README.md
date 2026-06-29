@@ -77,7 +77,9 @@ Build dependencies:
 - `nasm`
 - an `i686-elf` cross-compiler (`i686-elf-gcc` and binutils) — see the
   [OSDev cross-compiler guide](https://wiki.osdev.org/GCC_Cross-Compiler).
-  The `install_linux_mint.sh` script in this repository automates building the toolchain.
+  The `install_linux_mint.sh` script in this repository builds the toolchain into `$HOME/opt/cross`
+  and adds `$HOME/opt/cross/bin` to your `PATH` (via `~/.bashrc`). Either way, make sure
+  `i686-elf-gcc` is on your `PATH` before building (`source ~/.bashrc`, or open a new terminal).
 - `make`
 - `mtools` and `dosfstools` — provide `mkfs.fat`, `mcopy`, and `mmd`, used to assemble the FAT12 floppy image.
 - `qemu-system-i386` to run the result, or `bochs` (+ `bochs-sdl vgabios`, see [Bochs](#bochs)).

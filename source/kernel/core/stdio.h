@@ -32,6 +32,8 @@ int get_g_screeny();
 
 void clrscr();
 void putc(char c);
+void set_text_color(uint8_t color);
+uint8_t get_text_color(void);
 void puts(const char* str);
 void printf(const char* fmt, ...);
 int vsnprintf(char *str, size_t size, const char *fmt, va_list args);

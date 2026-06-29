@@ -52,6 +52,22 @@ void cmd_help(int argc, char **argv) {
     print_command_list();
 }
 
+void cmd_colors(int argc, char **argv) {
+    static const char *names[16] = {
+        "black", "blue", "green", "cyan", "red", "magenta", "brown", "light gray",
+        "dark gray", "light blue", "light green", "light cyan", "light red",
+        "light magenta", "yellow", "white"
+    };
+    console_printf("Colour palette:\r\n");
+    for (int i = 0; i < 16; i++) {
+        console_reset_color();
+        console_printf("  %d ", i);
+        console_set_color((uint8_t)i);
+        console_printf("%s\r\n", names[i]);
+    }
+    console_reset_color();
+}
+
 void cmd_shutdown(int argc, char **argv) {
     console_printf("Shutting down...\r\n");
 }
@@ -109,6 +125,7 @@ void register_basics(void) {
     register_command("crashme",  cmd_crashme,  "Crash the system");
     register_command("clear",    cmd_clear,    "Clear the screen");
     register_command("help",     cmd_help,     "Display help message");
+    register_command("colors",   cmd_colors,   "Show the 16-colour palette");
     register_command("shutdown", cmd_shutdown, "Shutdown the system");
     register_command("systime",  cmd_systime,  "Print the time since startup");
     register_command("hello",    cmd_hello,    "Print Hello, World!");

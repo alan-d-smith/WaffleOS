@@ -18,3 +18,5 @@ void print_command_list(void);
 
 void console_putc(char c);
 void console_printf(const char* fmt, ...);
+void console_set_color(uint8_t color);
+void console_reset_color(void);

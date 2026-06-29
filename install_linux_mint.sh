@@ -53,3 +53,15 @@ make all-target-libgcc
 make install-gcc
 make install-target-libgcc
 # make install-target-libstdc++-v3
+
+# Persist the toolchain on PATH for future shells so `make` works without setting PATH each time.
+PROFILE="$HOME/.bashrc"
+PATH_LINE="export PATH=\"\$HOME/opt/cross/bin:\$PATH\""
+if ! grep -qsF "$PATH_LINE" "$PROFILE"; then
+    printf '\n# i686-elf cross-compiler (WaffleOS)\n%s\n' "$PATH_LINE" >> "$PROFILE"
+    echo "Added \$HOME/opt/cross/bin to PATH in $PROFILE"
+fi
+
+echo
+echo "i686-elf cross-compiler installed to $PREFIX."
+echo "Run 'source $PROFILE' or open a new terminal so i686-elf-gcc is on your PATH"
