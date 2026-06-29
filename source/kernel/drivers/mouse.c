@@ -65,7 +65,10 @@ void mouse_handler(void)
 
     // If we're at the beginning of a packet, verify that the packet is aligned.
     if (mouse_cycle == 0 && !(data & 0x08)) {
-        // Packet is misaligned. Discard byte
+        // Packet is misaligned. Discard the byte, but still acknowledge the
+        // interrupt -- otherwise the PIC never delivers another IRQ12 and the
+        // mouse freezes permanently.
+        send_eoi(12);
         return;
     }
 
