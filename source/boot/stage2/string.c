@@ -19,12 +19,12 @@ const char* strchr(const char* str, char chr)
     return NULL;
 }
 
-char* strcpy(char* dst, const char* src)
+char* strncpy(char* dst, const char* src, size_t n)
 {
     char* origDst = dst;
 
-    if (dst == NULL)
-        return NULL;
+    if (dst == NULL || n == 0)
+        return dst;
 
     if (src == NULL)
     {
@@ -32,13 +32,14 @@ char* strcpy(char* dst, const char* src)
         return dst;
     }
 
-    while (*src)
+    while (*src && n > 1)
     {
         *dst = *src;
         ++src;
         ++dst;
+        --n;
     }
-    
+
     *dst = '\0';
     return origDst;
 }
