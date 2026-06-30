@@ -57,6 +57,22 @@ void enable_graphics_mode(uint16_t mode) {
 
     // write registers for specific graphics mode
     write_regs(registerInitTable[mode]);
+
+    // Define all 256 DAC palette entries
+    vga_load_256_palette();
+}
+
+// Return to standard 80x25 colour text mode
+void enable_text_mode(void) {
+    write_regs(g_80x25_text);
+    vga_write_font(font8x16);
+
+    g_text_mode = true;
+    g_SCREEN_WIDTH = 80;
+    g_SCREEN_HEIGHT = 25;
+    g_BYTES_PER_PIXEL = 1;
+
+    clrscr();
 }
 
 // Clear the screen to the specified color.

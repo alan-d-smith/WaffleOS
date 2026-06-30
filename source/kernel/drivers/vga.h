@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #define VGA_ADDRESS 0xA0000
 
 // 16 colour palette
@@ -65,3 +67,17 @@ extern unsigned char g_640x480x16[];
 
 void write_regs(unsigned char *regs);
 // end copied code
+
+// VGA DAC (palette) ports
+#define VGA_DAC_WRITE_INDEX  0x3C8
+#define VGA_DAC_DATA         0x3C9
+
+// Set a single palette entry. r/g/b are 6-bit (0-63).
+void vga_set_palette_entry(unsigned char index, unsigned char r, unsigned char g, unsigned char b);
+
+// Load a full 256-colour palette
+void vga_load_256_palette(void);
+
+// Standard 80x25 text mode register dump
+extern unsigned char g_80x25_text[];
+void vga_write_font(const uint8_t font[128][16]);
