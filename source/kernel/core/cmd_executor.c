@@ -86,16 +86,20 @@ void console_putc(char c) {
     }
 }
 
-void console_printf(const char* fmt, ...) {
+void console_vprintf(const char* fmt, va_list args) {
     char buffer[256];
-    va_list args;
-    va_start(args, fmt);
     vsnprintf(buffer, sizeof(buffer), fmt, args);
-    va_end(args);
 
     for (const char* p = buffer; *p; ++p) {
         console_putc(*p);
     }
+}
+
+void console_printf(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    console_vprintf(fmt, args);
+    va_end(args);
 }
 
 void command_executor_init(void) {

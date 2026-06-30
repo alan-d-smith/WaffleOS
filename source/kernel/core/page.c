@@ -2,6 +2,7 @@
 #include "../core/memory.h"   // For malloc(), memset(), etc.
 #include "../core/x86.h"      // For x86_load_cr3(), x86_load_cr0(), x86_store_cr0()
 #include "../core/stdio.h"    // For printf()
+#include "log.h"
 
 page_directory_t *kernel_page_directory = 0;
 
@@ -21,7 +22,7 @@ void init_paging(void) {
     // Allocate the page directory aligned to 4KB.
     kernel_page_directory = (page_directory_t*)kmalloc_aligned(sizeof(page_directory_t), PAGE_SIZE);
     if (!kernel_page_directory) {
-        printf("[PAGING] Failed to allocate page directory\r\n");
+        log_error("PAGING", "Failed to allocate page directory");
         return;
     }
     memset(kernel_page_directory, 0, sizeof(page_directory_t));
@@ -29,7 +30,7 @@ void init_paging(void) {
     // Allocate one page table for the first 4MB.
     page_table_t *first_page_table = (page_table_t*)kmalloc_aligned(sizeof(page_table_t), PAGE_SIZE);
     if (!first_page_table) {
-        printf("[PAGING] Failed to allocate page table\r\n");
+        log_error("PAGING", "Failed to allocate page table");
         return;
     }
     memset(first_page_table, 0, sizeof(page_table_t));
@@ -51,5 +52,5 @@ void enable_paging(page_directory_t *dir) {
     cr0 |= 0x80000000;  // set paging bit.
     x86_store_cr0(cr0);
 
-    printf("[PAGING] Paging enabled.\r\n");
+    log_ok("PAGING", "Paging enabled.");
 }

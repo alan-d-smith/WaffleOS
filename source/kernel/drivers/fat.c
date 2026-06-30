@@ -12,6 +12,7 @@
 #include "../core/cmd_executor.h"
 #include "../drivers/disk.h"
 #include "../drivers/floppy.h"
+#include "log.h"
 
 FAT_Filesystem current_filesystem;
 
@@ -47,7 +48,7 @@ bool FAT_Initialize(DISK* disk)
     // read boot sector
     if (!FAT_ReadBootSector(disk))
     {
-        printf("FAT: read boot sector failed\r\n");
+        log_error("FAT", "read boot sector failed");
         return false;
     }
 
@@ -56,13 +57,13 @@ bool FAT_Initialize(DISK* disk)
     uint32_t fatSize = g_Data->BS.BootSector.BytesPerSector * g_Data->BS.BootSector.SectorsPerFat;
     if (sizeof(FAT_Data) + fatSize >= MEMORY_FAT_SIZE)
     {
-        printf("FAT: not enough memory to read FAT! Required %lu, only have %u\r\n", sizeof(FAT_Data) + fatSize, MEMORY_FAT_SIZE);
+        log_error("FAT", "not enough memory to read FAT! Required %lu, only have %u", sizeof(FAT_Data) + fatSize, MEMORY_FAT_SIZE);
         return false;
     }
 
     if (!FAT_ReadFat(disk))
     {
-        printf("FAT: read FAT failed\r\n");
+        log_error("FAT", "read FAT failed");
         return false;
     }
 
@@ -81,7 +82,7 @@ bool FAT_Initialize(DISK* disk)
 
     if (!DISK_ReadSectors(disk, rootDirLba, 1, g_Data->RootDirectory.Buffer))
     {
-        printf("FAT: read root directory failed\r\n");
+        log_error("FAT", "read root directory failed");
         return false;
     }
 
@@ -114,7 +115,7 @@ FAT_File* FAT_OpenEntry(DISK* disk, FAT_DirectoryEntry* entry)
     // out of handles
     if (handle < 0)
     {
-        printf("FAT: out of file handles\r\n");
+        log_error("FAT", "out of file handles");
         return false;
     }
 
@@ -130,7 +131,7 @@ FAT_File* FAT_OpenEntry(DISK* disk, FAT_DirectoryEntry* entry)
 
     if (disk->is_floppy) {
         if (!FLOPPY_ReadSectors(FAT_ClusterToLba(fd->CurrentCluster), 1, fd->Buffer)) {
-            console_printf("FAT: open entry failed (floppy) - read error cluster=%u lba=%u\n",
+            log_error("FAT", "open entry failed (floppy) - read error cluster=%u lba=%u",
                    fd->CurrentCluster, FAT_ClusterToLba(fd->CurrentCluster));
             for (int i = 0; i < 11; i++)
                 printf("%c", entry->Name[i]);
@@ -139,7 +140,7 @@ FAT_File* FAT_OpenEntry(DISK* disk, FAT_DirectoryEntry* entry)
         }
     } else {
         if (!DISK_ReadSectors(disk, FAT_ClusterToLba(fd->CurrentCluster), 1, fd->Buffer)) {
-            console_printf("FAT: open entry failed - read error cluster=%u lba=%u\n",
+            log_error("FAT", "open entry failed - read error cluster=%u lba=%u",
                    fd->CurrentCluster, FAT_ClusterToLba(fd->CurrentCluster));
             for (int i = 0; i < 11; i++)
                 printf("%c", entry->Name[i]);
@@ -197,7 +198,7 @@ uint32_t FAT_Read(DISK* disk, FAT_File* file, uint32_t byteCount, void* dataOut)
                 // read next sector
                 if (!DISK_ReadSectors(disk, fd->CurrentCluster, 1, fd->Buffer))
                 {
-                    printf("FAT: read error!\r\n");
+                    log_error("FAT", "read error!");
                     break;
                 }
             }
@@ -220,7 +221,7 @@ uint32_t FAT_Read(DISK* disk, FAT_File* file, uint32_t byteCount, void* dataOut)
                 // read next sector
                 if (!DISK_ReadSectors(disk, FAT_ClusterToLba(fd->CurrentCluster) + fd->CurrentSectorInCluster, 1, fd->Buffer))
                 {
-                    printf("FAT: read error!\r\n");
+                    log_error("FAT", "read error!");
                     break;
                 }
             }
@@ -324,7 +325,7 @@ FAT_File* FAT_Open(DISK* disk, const char* path)
             // check if directory
             if (!isLast && entry.Attributes & FAT_ATTRIBUTE_DIRECTORY == 0)
             {
-                printf("FAT: %s not a directory\r\n", name);
+                log_error("FAT", "%s not a directory", name);
                 return NULL;
             }
 
@@ -335,7 +336,7 @@ FAT_File* FAT_Open(DISK* disk, const char* path)
         {
             FAT_Close(current);
 
-            printf("FAT: %s not found\r\n", name);
+            log_error("FAT", "%s not found", name);
             return NULL;
         }
     }
@@ -361,12 +362,12 @@ void parse_guid_partition_table(uint8_t* gpt_sector) {
 void init_filesystem(void) {
     uint8_t boot_sector[SECTOR_SIZE];
     if (!read_sectors(0, 1, boot_sector)) {    // read boot sector into buffer
-        printf("[FS] Unable to read boot sector\r\n");
+        log_error("FS", "Unable to read boot sector");
         return;
     }
 
     if (boot_sector[510] != 0x55 || boot_sector[511] != 0xAA) {
-        printf("[FS] Invalid boot sector signature\r\n");
+        log_error("FS", "Invalid boot sector signature");
         return;
     }
 }
@@ -389,7 +390,7 @@ void init_fat_partition(uint32_t partition_start_lba, uint8_t* boot_sector) {
 	uint32_t data_sectors = total_sectors - (BPB->ReservedSectors + (BPB->FATCount * fat_size) + root_dir_sectors);
 
 	if (BPB->SectorsPerCluster == 0) {
-        printf("[FAT] Error: SectorsPerCluster is 0\r\n");
+        log_error("FAT", "Error: SectorsPerCluster is 0");
         return;
     }
 
@@ -398,10 +399,9 @@ void init_fat_partition(uint32_t partition_start_lba, uint8_t* boot_sector) {
     current_filesystem.type = get_fat_type(total_clusters, BPB->BytesPerSector);
 
     // store filesystem information depending on type
-    printf("[FAT] Filesystem type: ");
     switch (current_filesystem.type) {
         case FAT12:
-            printf("FAT12\r\n");
+            log_ok("FAT", "Filesystem type: FAT12");
             current_filesystem.FAT12_FS.BPB = *BPB;
             memcpy(&current_filesystem.FAT12_FS.EBPB, boot_sector + 36, sizeof(FAT12_EBPB_Bits));
             current_filesystem.FAT12_FS.FirstFATSector = BPB->ReservedSectors;
@@ -410,7 +410,7 @@ void init_fat_partition(uint32_t partition_start_lba, uint8_t* boot_sector) {
             current_filesystem.FAT12_FS.RootDirSectors = root_dir_sectors;
             break;
         case FAT16:
-            printf("FAT16\r\n");
+            log_ok("FAT", "Filesystem type: FAT16");
             current_filesystem.FAT16_FS.BPB = *BPB;
             memcpy(&current_filesystem.FAT16_FS.EBPB, boot_sector + 36, sizeof(FAT16_EBPB_Bits));
             current_filesystem.FAT16_FS.FirstFATSector = BPB->ReservedSectors;
@@ -419,7 +419,7 @@ void init_fat_partition(uint32_t partition_start_lba, uint8_t* boot_sector) {
             current_filesystem.FAT16_FS.RootDirSectors = root_dir_sectors;
             break;
         case FAT32:
-            printf("FAT32\r\n");
+            log_ok("FAT", "Filesystem type: FAT32");
             current_filesystem.FAT32_FS.BPB = *BPB;
             memcpy(&current_filesystem.FAT32_FS.EBPB, boot_sector + 36, sizeof(FAT32_EBPB_Bits));
             current_filesystem.FAT32_FS.FirstFATSector = BPB->ReservedSectors;
@@ -428,11 +428,11 @@ void init_fat_partition(uint32_t partition_start_lba, uint8_t* boot_sector) {
             current_filesystem.FAT32_FS.RootDirSectors = 0; // FAT32 has no fixed root dir
             break;
         default:
-            printf("Unknown/Unsupported FAT type\r\n");
+            log_error("FAT", "Unknown/unsupported FAT type");
             return;
     }
 
-    printf("[FAT] FAT filesystem initialized\r\n");
+    log_ok("FAT", "FAT filesystem initialized");
 }
 
 char* get_current_path() {

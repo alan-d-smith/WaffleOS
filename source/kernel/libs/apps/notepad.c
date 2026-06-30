@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "../string.h"
 #include "../../core/memory.h"
+#include "log.h"
 
 void launch_notepad(void) {
     int win_width = 400;
@@ -23,7 +24,7 @@ void launch_notepad(void) {
     int canvas_height = win_height - 25;
     UIWidget *canvas = create_canvas(notepad_win, canvas_x, canvas_y, canvas_width, canvas_height);
     if (!canvas) {
-        printf("[NOTEPAD] Failed to create canvas widget\r\n");
+        log_error("NOTEPAD", "Failed to create canvas widget");
         return;
     }
 

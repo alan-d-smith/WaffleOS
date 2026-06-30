@@ -6,6 +6,7 @@
 #include "../core/idt.h"
 #include "../core/stdio.h"
 #include "../core/x86.h"
+#include "log.h"
 
 #define PIT_FREQUENCY 1193182
 #define TARGET_FREQUENCY 100     // Hz
@@ -20,7 +21,7 @@ static volatile uint32_t milliseconds_low = 0;
 static volatile uint32_t milliseconds_high = 0;
 
 void init_pit() {
-    printf("[PIT] Initializing Programmable Interval Timer...\r\n");
+    log_info("PIT", "Initializing Programmable Interval Timer...");
 
     uint32_t divisor = PIT_FREQUENCY / TARGET_FREQUENCY;
 
@@ -32,7 +33,7 @@ void init_pit() {
 
     enable_irq(0); // Enable IRQ0
 
-    printf("[PIT] Programmable Interval Timer initialized and running at %dHz\r\n", TARGET_FREQUENCY);
+    log_ok("PIT", "Programmable Interval Timer initialized and running at %dHz", TARGET_FREQUENCY);
 }
 
 void timer_handler(void) {

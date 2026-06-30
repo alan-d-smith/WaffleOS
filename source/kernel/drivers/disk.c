@@ -9,6 +9,7 @@
 #include "../core/x86.h"
 #include "../core/stdio.h"
 #include "../timers/timer.h"
+#include "log.h"
 
 #define ATA_PRIMARY_DATA_PORT 0x1F0
 #define ATA_PRIMARY_ERROR_PORT 0x1F1
@@ -155,14 +156,14 @@ int identify_device(ATA_IDENTIFY_DEVICE_DATA* device_info) {
 
     uint8_t status = read_status();
     if (status == 0) {
-        printf("[DISK] No device detected\r\n");
+        log_info("DISK", "No device detected");
         return 0;
     }
 
     wait_not_busy();
 
     if (x86_inb(ATA_PRIMARY_LBA_MID_PORT) != 0 || x86_inb(ATA_PRIMARY_LBA_HIGH_PORT) != 0) {
-        printf("[DISK] Not an ATA device\r\n");
+        log_info("DISK", "Not an ATA device");
         return 0;
     }
 
@@ -175,14 +176,14 @@ int identify_device(ATA_IDENTIFY_DEVICE_DATA* device_info) {
         status = read_status();
 
         if (status & ATA_STATUS_ERR) {
-            printf("[DISK] Error during device identification\r\n");
+            log_error("DISK", "Error during device identification");
             return 0;
         }
         if (status & ATA_STATUS_DRQ) break;
 
         // Timeout
         if (current_time_low - start_time_low > timeout_duration) {
-            printf("[DISK] Timeout during device identification\r\n");
+            log_info("DISK", "Timeout during device identification");
             return 0;
         }
     }
@@ -265,7 +266,7 @@ int read_sectors(uint32_t lba, uint8_t sector_count, uint8_t* buffer) {
 
         uint8_t status = read_status();
         if (status & ATA_STATUS_ERR) {
-            printf("[DISK] Error reading sector\r\n");
+            log_error("DISK", "Error reading sector");
             return 0;
         }
 
@@ -331,21 +332,21 @@ void print_ata_device_info(ATA_IDENTIFY_DEVICE_DATA* device_info_ptr) {
 }
 
 void init_disk(void) {
-    printf("[DISK] Initializing disk...\r\n");
+    log_info("DISK", "Initializing disk...");
 
     if (!detect_device()) {
-        printf("[DISK] No drive detected\r\n");
+        log_info("DISK", "No drive detected");
         return;
     }
 
-	printf("[DISK] Disk status: %s\r\n", read_status_str());
+	log_info("DISK", "Disk status: %s", read_status_str());
 
     ATA_IDENTIFY_DEVICE_DATA device_info;
     if (identify_device(&device_info)) {
-        printf("[DISK] Device Information:\r\n");
+        log_info("DISK", "Device Information:");
         print_ata_device_info(&device_info);
-        printf("[DISK] ATA disk initialized\r\n");
+        log_ok("DISK", "ATA disk initialized");
     } else {
-        printf("[DISK] Failed to initialize ATA disk\r\n");
+        log_error("DISK", "Failed to initialize ATA disk");
     }
 }

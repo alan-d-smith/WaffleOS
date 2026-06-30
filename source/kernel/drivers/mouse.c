@@ -9,6 +9,7 @@
 #include "../core/kernel.h"
 #include "../libs/math.h"
 #include "display.h"
+#include "log.h"
 
 // global mouse state
 volatile MouseState mouse_state = { .x = 160, .y = 100, .buttons = 0 };
@@ -112,13 +113,13 @@ int init_mouse(void)
     mouse_write(MOUSE_CMD_RESET);
     uint8_t ack = mouse_read();
     if (ack != MOUSE_ACK) {
-        printf("[MOUSE] Mouse reset failed (ACK not received).\r\n");
+        log_error("MOUSE", "Mouse reset failed (ACK not received).");
         return -1;
     }
 
     uint8_t self_test = mouse_read();
     if (self_test != MOUSE_SELF_TEST_PASS) {
-        printf("[MOUSE] Mouse self-test failed.\r\n");
+        log_error("MOUSE", "Mouse self-test failed.");
         return -1;
     }
 
@@ -128,14 +129,14 @@ int init_mouse(void)
 
     uint8_t defaults_ack = mouse_read();
     if (defaults_ack != MOUSE_ACK) {
-    	printf("[MOUSE] Failed to set defaults. Received: 0x%x\r\n", defaults_ack);
+    	log_error("MOUSE", "Failed to set defaults. Received: 0x%x", defaults_ack);
         return -1;
     }
 
     // Enable data reporting.
     mouse_write(MOUSE_CMD_ENABLE);
     if (mouse_read() != MOUSE_ACK) {
-        printf("[MOUSE] Failed to enable data reporting.\r\n");
+        log_error("MOUSE", "Failed to enable data reporting.");
         return -1;
     }
 
@@ -144,6 +145,6 @@ int init_mouse(void)
     register_interrupt_handler(32 + 12, (uint32_t)irq12);
     enable_irq(12);
 
-    printf("[MOUSE] Mouse driver installed.\r\n");
+    log_ok("MOUSE", "Mouse driver installed.");
     return 0; // Success
 }

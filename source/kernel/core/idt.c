@@ -13,6 +13,7 @@
 #include "gdt.h"
 
 #include <utils/binary.h>
+#include "log.h"
 
 #define IDT_SIZE 256
 
@@ -73,7 +74,7 @@ void send_eoi(int irq) { // end of interrupt signal
 }
 
 void init_idt(void) {
-    printf("[IDT] Initializing IDT...\r\n");
+    log_info("IDT", "Initializing IDT...");
 
     for (int i = 0; i < IDT_SIZE; i++) {
         g_IDT[i].BaseLow = 0;
@@ -83,11 +84,11 @@ void init_idt(void) {
         g_IDT[i].BaseHigh = 0;
     }
 
-    printf("[IDT] IDT address: 0x%x\r\n", (uint32_t)g_IDTDescriptor.Ptr);
+    log_info("IDT", "IDT address: 0x%x", (uint32_t)g_IDTDescriptor.Ptr);
 
     i686_IDT_Load(&g_IDTDescriptor);
 
-    printf("[IDT] Initialized IDT\r\n");
+    log_ok("IDT", "Initialized IDT");
 
     disable_interrupts();
     init_pic();
@@ -134,8 +135,24 @@ void enable_irq(uint8_t irq) {
     x86_outb(port, value);
 }
 
+void disable_irq(uint8_t irq) {
+    uint16_t port;
+    uint8_t value;
+
+    if (irq < 8) {    // master PIC (IRQ 0-7)
+        port = PIC1_DATA_PORT;
+    } else {          // slave PIC (IRQ 8-15)
+        port = PIC2_DATA_PORT;
+        irq -= 8;
+    }
+
+    value = x86_inb(port);
+    value |= (1 << irq);   // set the bit to mask (disable) the IRQ
+    x86_outb(port, value);
+}
+
 void register_interrupt_handler(uint8_t interrupt_number, uint32_t handler_address) {
     i686_IDT_SetGate(interrupt_number, (void*)handler_address, i686_GDT_CODE_SEGMENT,
                      IDT_FLAG_PRESENT | IDT_FLAG_RING0 | IDT_FLAG_GATE_32BIT_INT);
-    printf("[IDT] Registered interrupt handler for IRQ %d\r\n", interrupt_number - 32);
+    log_info("IDT", "Registered interrupt handler for IRQ %d", interrupt_number - 32);
 }

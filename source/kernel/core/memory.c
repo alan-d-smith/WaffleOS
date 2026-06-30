@@ -14,6 +14,7 @@ malloc(), calloc() and free() were based on a simplified implementation of a com
 
 #include "stdio.h"
 #include "../libs/string.h"
+#include "log.h"
 
 #define wsize sizeof(uint32_t)
 #define wmask (wsize - 1)
@@ -388,5 +389,5 @@ void init_memory() {
     head->Size = MEMORY_SIZE - sizeof(MemoryBlock);
     head->IsFree = true;
     head->Next = NULL;
-    printf("[MEMORY] Heap initialised\r\n");
+    log_ok("MEMORY", "Heap initialised");
 }

@@ -11,6 +11,7 @@
 #include "../../drivers/vga.h"          // For 16-color macros
 #include "../ui/graphics_context.h"     // For context-based drawing
 #include "../../drivers/font.h"         // For FontStyle if needed
+#include "log.h"
 
 // Set a smaller window: 240x160
 #define SCHED_VIS_WIDTH   240
@@ -143,7 +144,7 @@ void scheduling_visualiser_callback(UIWidget *widget, Window *parent) {
     int win_y = (g_SCREEN_HEIGHT - SCHED_VIS_HEIGHT) / 2;
     sched_vis_window = create_window(win_x, win_y, SCHED_VIS_WIDTH, SCHED_VIS_HEIGHT, LIGHT_GRAY_16, "Scheduling");
     if (!sched_vis_window) {
-        printf("[SCHED VIS] Failed to create Scheduling Visualiser window\r\n");
+        log_error("SCHED VIS", "Failed to create Scheduling Visualiser window");
         return;
     }
     int margin = 0;
@@ -151,10 +152,10 @@ void scheduling_visualiser_callback(UIWidget *widget, Window *parent) {
                                             SCHED_VIS_WIDTH - 2 * margin,
                                             SCHED_VIS_HEIGHT - 2 * margin);
     if (!sched_vis_canvas) {
-        printf("[SCHED VIS] Failed to create canvas for Scheduling\r\n");
+        log_error("SCHED VIS", "Failed to create canvas for Scheduling");
         return;
     }
-    printf("[SCHED VIS] Scheduling Visualiser started\r\n");
+    log_info("SCHED VIS", "Scheduling Visualiser started");
 }
 
 void update_scheduling_visualiser(void) {

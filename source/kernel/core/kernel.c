@@ -15,6 +15,7 @@
 #include "../libs/math.h"
 #include "../libs/gui.h"
 #include "x86.h"
+#include "log.h"
 
 extern uint8_t __bss_start;
 extern uint8_t __end;
@@ -38,7 +39,7 @@ void __attribute__((section(".entry"))) start(uint16_t boot_drive) {
 
     enable_interrupts();
 
-    printf("[KERNEL] Kernel initialisation complete\r\n");
+    log_ok("KERNEL", "Kernel initialisation complete");
 
     //execute_command("enablegraphics");
     while(true) {

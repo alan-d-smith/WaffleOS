@@ -8,6 +8,7 @@
 #include "../libs/string.h"
 #include "../../drivers/vga.h"   // Use only the 16-color palette
 #include "../ui/graphics_context.h"    // Context drawing functions
+#include "log.h"
 
 // For a 320x200 screen, use a small window.
 #define CPU_VIS_WIDTH   200
@@ -154,7 +155,7 @@ void cpu_visualiser_callback(UIWidget *widget, Window *parent) {
     // Create the visualiser window with a LIGHT_GRAY_16 background.
     cpu_vis_window = create_window(win_x, win_y, CPU_VIS_WIDTH, CPU_VIS_HEIGHT, LIGHT_GRAY_16, "CPU Visualiser");
     if (!cpu_vis_window) {
-        printf("[CPU VIS] Failed to create CPU Visualiser window\r\n");
+        log_error("CPU VIS", "Failed to create CPU Visualiser window");
         return;
     }
 
@@ -162,11 +163,11 @@ void cpu_visualiser_callback(UIWidget *widget, Window *parent) {
     // Create a canvas for this window using the new canvas system.
     cpu_vis_canvas = create_window_canvas(cpu_vis_window, margin, margin, CPU_VIS_WIDTH - 2 * margin, CPU_VIS_HEIGHT - 2 * margin);
     if (!cpu_vis_canvas) {
-        printf("[CPU VIS] Failed to create canvas for visualiser\r\n");
+        log_error("CPU VIS", "Failed to create canvas for visualiser");
         return;
     }
 
-    printf("[CPU VIS] CPU Visualiser started (dynamic stack)\r\n");
+    log_info("CPU VIS", "CPU Visualiser started (dynamic stack)");
 }
 
 void update_cpu_visualiser(void) {

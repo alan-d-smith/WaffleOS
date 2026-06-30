@@ -4,6 +4,7 @@
 #include "cpu_sched.h"
 #include "../core/stdio.h"
 #include "../core/memory.h"
+#include "log.h"
 
 static PCB* ready_queue_head = NULL;
 static PCB* ready_queue_tail = NULL;
@@ -13,13 +14,13 @@ void scheduler_init(void) {
     ready_queue_head = NULL;
     ready_queue_tail = NULL;
     next_pid = 1;
-    printf("[SCHEDULER] Scheduler initialized.\r\n");
+    log_ok("SCHEDULER", "Scheduler initialized.");
 }
 
 void add_process(void (*entry_point)(void)) {
     PCB* new_pcb = (PCB*)malloc(sizeof(PCB));
     if (!new_pcb) {
-        printf("[SCHEDULER] Failed to allocate PCB.\r\n");
+        log_error("SCHEDULER", "Failed to allocate PCB.");
         return;
     }
     new_pcb->pid = next_pid++;
@@ -35,14 +36,14 @@ void add_process(void (*entry_point)(void)) {
         ready_queue_tail = new_pcb;
     }
 
-    printf("[SCHEDULER] Process %d added.\r\n", new_pcb->pid);
+    log_info("SCHEDULER", "Process %d added.", new_pcb->pid);
 }
 
 void schedule(void) {
     while (ready_queue_head != NULL) {
         PCB* current = ready_queue_head;
         current->state = PROCESS_RUNNING;
-        printf("[SCHEDULER] Running process %d...\r\n", current->pid);
+        log_info("SCHEDULER", "Running process %d...", current->pid);
 
         current->entry_point();
 

@@ -12,6 +12,7 @@
 #include "../core/kernel.h"
 #include "../core/cmd_executor.h"
 #include "../libs/apps/terminal.h"
+#include "log.h"
 
 extern void irq1(void);
 
@@ -85,12 +86,12 @@ void keyboard_handler(void) {
 }
 
 void init_keyboard(void) {
-    printf("[I/O] Initializing keyboard...\r\n");
+    log_info("I/O", "Initializing keyboard...");
 
     register_interrupt_handler(33, (uint32_t)irq1);
     enable_irq(1);
 
-    printf("[I/O] Keyboard initialized\r\n");
+    log_ok("I/O", "Keyboard initialized");
 }
 
 

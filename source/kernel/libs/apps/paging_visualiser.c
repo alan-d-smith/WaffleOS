@@ -11,6 +11,7 @@
 #include "../../drivers/vga.h"          // For 16-color macros
 #include "../ui/graphics_context.h"     // For context-based drawing
 #include "../../drivers/font.h"         // For FontStyle if needed
+#include "log.h"
 
 // Use a smaller window: 240x160
 #define PAGING_VIS_WIDTH   240
@@ -38,7 +39,7 @@ void paging_visualiser_callback(UIWidget *widget, Window *parent) {
 
     paging_vis_window = create_window(win_x, win_y, PAGING_VIS_WIDTH, PAGING_VIS_HEIGHT, LIGHT_GRAY_16, "Memory");
     if (!paging_vis_window) {
-        printf("[MEM VIS] Failed to create Memory Visualiser window\r\n");
+        log_error("MEM VIS", "Failed to create Memory Visualiser window");
         return;
     }
 
@@ -47,11 +48,11 @@ void paging_visualiser_callback(UIWidget *widget, Window *parent) {
                                              PAGING_VIS_WIDTH - 2*margin,
                                              PAGING_VIS_HEIGHT - 2*margin);
     if (!paging_vis_canvas) {
-        printf("[MEM VIS] Failed to create canvas for Memory\r\n");
+        log_error("MEM VIS", "Failed to create canvas for Memory");
         return;
     }
 
-    printf("[MEM VIS] Memory Visualiser started\r\n");
+    log_info("MEM VIS", "Memory Visualiser started");
 }
 
 // Main update function

@@ -1,6 +1,7 @@
 // Using information from: https://wiki.osdev.org/FPU
 #include "math.h"
 #include <stdio.h>
+#include "log.h"
 
 void dummy_fpu(float value) {
     volatile float dummy = 1.01f - value;
@@ -21,7 +22,7 @@ void init_fpu() {
     // Dummy calculation (for some reason floating point operations just wont work if I dont do this))
     dummy_fpu(0.01f);
 
-    printf("[FPU] FPU enabled\r\n");
+    log_ok("FPU", "FPU enabled");
 }
 
 // Clamp a value to a range (inclusive). i.e. for any value ∈ ℤ, clamp(value, min, max) ∈ [min, max]

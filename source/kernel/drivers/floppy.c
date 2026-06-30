@@ -5,6 +5,7 @@
 #include "../core/stdio.h"
 #include "../core/idt.h"
 #include <stdbool.h>
+#include "log.h"
 
 #define SECTOR_SIZE 512
 
@@ -68,10 +69,10 @@ void reset_floppy() {
 }
 
 void init_floppy(void) {
-    printf("[I/O] Initializing Floppy...\r\n");
+    log_info("I/O", "Initializing Floppy...");
     register_interrupt_handler(38, (uint32_t)irq6); // IRQ6 remapped to vector 38
     enable_irq(6);
-    printf("[I/O] Floppy initialized\r\n");
+    log_ok("I/O", "Floppy initialized");
 }
 
 bool FLOPPY_ReadSectors(uint32_t lba, uint32_t sector_count, void* buffer) {
